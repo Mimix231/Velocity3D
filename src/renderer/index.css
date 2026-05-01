@@ -1,0 +1,32 @@
+/* CSS custom properties — set by themeStore.applyThemeToCss() */
+:root {
+  --bg: #0d0d0d;
+  --bg-alt: #111;
+  --bg-panel: #141414;
+  --border: #222;
+  --text: #e0e0e0;
+  --text-muted: #666;
+  --accent: #3a7bd5;
+  --accent-hover: #4a8be5;
+  --error: #ff6b6b;
+  --success: #6bff6b;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+button { font-family: inherit; }
+input, textarea { font-family: inherit; }

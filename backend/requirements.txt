@@ -1,0 +1,40 @@
+# PyTorch
+--extra-index-url https://download.pytorch.org/whl/cu130
+
+torch==2.10.0+cu130
+torchvision==0.25.0+cu130
+torchaudio==2.10.0+cu130
+
+# Core API
+fastapi
+uvicorn[standard]
+httpx
+
+# Testing
+hypothesis
+pytest
+pytest-asyncio
+
+# Image handling
+Pillow
+rembg
+
+# Numerics / mesh
+numpy
+trimesh
+
+# Bpy
+bpy==5.1.1
+
+# Depth estimation
+transformers
+accelerate
+diffusers
+safetensors
+
+# Mesh reconstruction
+scipy
+scikit-image
+
+# Git Core
+git+https://github.com/openai/shap-e.git

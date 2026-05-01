@@ -1,0 +1,153 @@
+.workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-panel) 96%, white 4%) 0%, color-mix(in srgb, var(--bg-panel) 90%, black 10%) 100%);
+}
+
+.workspace-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.workspace-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.workspace-breadcrumb-chip,
+.workspace-mode-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
+  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+}
+
+.workspace-breadcrumb-copy {
+  white-space: nowrap;
+}
+
+.workspace-breadcrumb-separator {
+  color: var(--text-muted);
+}
+
+.workspace-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.workspace-model-summary {
+  min-width: 126px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
+  background: color-mix(in srgb, var(--bg) 42%, transparent);
+}
+
+.workspace-model-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.workspace-model-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  min-width: 0;
+}
+
+.workspace-model-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.workspace-model-badge,
+.workspace-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, white 30%);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.workspace-model-badge.pending,
+.workspace-status-pill.starting,
+.workspace-status-pill.stopped {
+  color: var(--text-muted);
+}
+
+.workspace-model-badge.ready,
+.workspace-status-pill.ready {
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: color-mix(in srgb, var(--success) 78%, white 22%);
+}
+
+.workspace-status-pill.error {
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  color: color-mix(in srgb, var(--error) 85%, white 15%);
+}
+
+.workspace-mode-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
+  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.workspace-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.workspace-library-button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-panel));
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.workspace-library-button:hover {
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--border));
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-panel));
+}

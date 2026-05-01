@@ -1,0 +1,61 @@
+appId: com.velocity3d.app
+productName: Velocity3D
+copyright: Copyright © 2024 Velocity3D
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**/*
+  - node_modules/**/*
+  - package.json
+
+extraResources:
+  - from: backend
+    to: backend
+    filter:
+      - "**/*"
+      - "!**/__pycache__/**"
+      - "!**/*.pyc"
+      - "!**/tests/**"
+  # Python runtime is bundled per-platform (see README for bundling instructions)
+  # - from: python-dist/${platform}
+  #   to: python
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: build/icon.icns
+  category: public.app-category.developer-tools
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  icon: build/icon.png
+  category: Development
+
+publish:
+  provider: github
+  releaseType: release

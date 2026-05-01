@@ -1,0 +1,60 @@
+.export-button-root {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.export-button-group {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.export-format-btn {
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
+  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.45px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.export-format-btn:hover:not(:disabled) {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+}
+
+.export-format-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.export-toast {
+  position: fixed;
+  bottom: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  min-width: 220px;
+  max-width: 440px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
+  font-size: 12px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.export-toast.success {
+  background: color-mix(in srgb, var(--success) 12%, var(--bg-panel));
+  color: color-mix(in srgb, var(--success) 78%, white 22%);
+}
+
+.export-toast.error {
+  background: color-mix(in srgb, var(--error) 12%, var(--bg-panel));
+  color: color-mix(in srgb, var(--error) 80%, white 20%);
+}
