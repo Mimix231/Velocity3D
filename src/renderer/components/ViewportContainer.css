@@ -3,7 +3,7 @@
   min-height: 0;
   overflow: hidden;
   background:
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.02), transparent 42%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.018), transparent 42%),
     #1b1b1d;
 }
 
@@ -40,14 +40,15 @@
   display: inline-flex;
   align-items: center;
   min-height: 28px;
-  padding: 0 10px;
+  padding: 0 11px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(12, 12, 14, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(18, 18, 22, 0.68);
   color: rgba(235, 235, 238, 0.8);
   font-size: 11px;
-  font-weight: 600;
-  backdrop-filter: blur(10px);
+  font-weight: 700;
+  backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
 .viewport-chip.strong {
@@ -55,12 +56,13 @@
 }
 
 .viewport-caption {
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: rgba(12, 12, 14, 0.74);
+  padding: 9px 11px;
+  border-radius: 999px;
+  background: rgba(18, 18, 22, 0.68);
   color: rgba(235, 235, 238, 0.72);
   font-size: 11px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
 .viewport-loading-pill {
@@ -68,9 +70,9 @@
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(18, 18, 22, 0.78);
   color: rgba(235, 235, 238, 0.84);
-  padding: 7px 14px;
+  padding: 8px 14px;
   border-radius: 999px;
   font-size: 12px;
   pointer-events: none;
@@ -81,7 +83,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: 0 0 26px color-mix(in srgb, var(--accent) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--accent) 18%, transparent), var(--shadow-1);
+  backdrop-filter: blur(14px) saturate(1.2);
   animation: viewport-loading-breathe 1.8s ease-in-out infinite;
 }
 
@@ -107,12 +111,14 @@
 }
 
 .viewport-error-card {
-  background: color-mix(in srgb, var(--bg-panel) 94%, black 6%);
-  border: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
-  border-radius: 10px;
+  background: var(--surface-1);
+  border: 1px solid var(--outline-soft);
+  border-radius: var(--radius-lg);
   padding: 20px 24px;
   max-width: 380px;
   text-align: center;
+  box-shadow: var(--shadow-3);
+  animation: viewport-dialog-enter 170ms var(--ease-emphasized);
 }
 
 .viewport-error-title {
@@ -130,12 +136,22 @@
   margin-top: 12px;
   min-height: 34px;
   padding: 0 14px;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border-radius: 999px;
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text);
   font-size: 12px;
   cursor: pointer;
+  transition:
+    border-color 160ms var(--ease-standard),
+    background 160ms var(--ease-standard),
+    transform 160ms var(--ease-standard);
+}
+
+.viewport-error-button:hover {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--outline-soft));
+  background: var(--surface-hover);
+  transform: translateY(-1px);
 }
 
 .viewport-empty-state {
@@ -147,4 +163,15 @@
 @keyframes viewport-loading-breathe {
   0%, 100% { opacity: 0.82; }
   50% { opacity: 1; }
+}
+
+@keyframes viewport-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

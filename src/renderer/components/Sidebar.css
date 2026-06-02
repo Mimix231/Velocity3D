@@ -2,10 +2,11 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 18px 14px 14px;
-  background:
-    radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 30%),
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-panel) 96%, white 4%) 0%, color-mix(in srgb, var(--bg-panel) 92%, black 8%) 100%);
+  padding: 16px 14px 14px;
+  border: 1px solid var(--outline-soft);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-2);
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -16,19 +17,20 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 6px 0;
+  padding: 2px 6px 2px;
 }
 
 .sidebar-brand-mark {
-  width: 42px;
-  height: 42px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
   display: grid;
   place-items: center;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 24%, transparent), color-mix(in srgb, var(--accent) 12%, var(--bg-panel)));
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--outline-soft));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), var(--shadow-1);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .sidebar-brand-title {
@@ -44,13 +46,10 @@
 
 .sidebar-overview-card {
   padding: 14px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-alt) 82%, white 18%) 0%, color-mix(in srgb, var(--bg-panel) 96%, black 4%) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 18px 34px rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-1);
 }
 
 .sidebar-status-pill {
@@ -60,9 +59,9 @@
   min-height: 28px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 12px;
 }
 
@@ -110,12 +109,12 @@
   width: 100%;
   margin-top: 14px;
   padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 14%, var(--bg-panel)) 0%, color-mix(in srgb, var(--accent) 8%, var(--bg-panel)) 100%);
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--outline-soft));
+  background: var(--surface-active);
   color: var(--text);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -152,10 +151,15 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: color 150ms var(--ease-standard);
+}
+
+.sidebar-section-header:hover {
+  color: var(--text);
 }
 
 .sidebar-arrow {
-  transition: transform 0.14s ease;
+  transition: transform 180ms var(--ease-standard);
 }
 
 .sidebar-arrow.open {
@@ -165,19 +169,25 @@
 .sidebar-action-btn {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: 999px;
   border: 1px solid transparent;
   background: none;
   color: var(--text-muted);
   display: grid;
   place-items: center;
   cursor: pointer;
+  transition:
+    color 150ms var(--ease-standard),
+    background 150ms var(--ease-standard),
+    border-color 150ms var(--ease-standard),
+    transform 150ms var(--ease-standard);
 }
 
 .sidebar-action-btn:hover {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--border) 82%, white 18%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border-color: var(--outline-soft);
+  background: var(--surface-hover);
+  transform: translateY(-1px);
 }
 
 .sidebar-section-body {
@@ -196,7 +206,7 @@
 .sidebar-history-item {
   width: 100%;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: none;
   color: var(--text-muted);
   text-align: left;
@@ -204,7 +214,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
+  transition:
+    border-color 160ms var(--ease-standard),
+    background 160ms var(--ease-standard),
+    color 160ms var(--ease-standard),
+    transform 160ms var(--ease-standard);
 }
 
 .sidebar-project-item {
@@ -219,15 +233,17 @@
 .sidebar-project-item:hover,
 .sidebar-history-item:hover:not(.missing) {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--border) 82%, white 18%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border-color: var(--outline-soft);
+  background: var(--surface-hover);
+  transform: translateX(2px);
 }
 
 .sidebar-project-item.active,
 .sidebar-history-item.active {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
-  background: color-mix(in srgb, var(--accent) 11%, var(--bg-panel));
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--outline-soft));
+  background: var(--surface-active);
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 78%, white 22%);
 }
 
 .sidebar-history-item.missing {
@@ -274,22 +290,31 @@
 
 .sidebar-bottom-btn {
   min-height: 40px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border-radius: 999px;
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text-muted);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  transition:
+    color 160ms var(--ease-standard),
+    border-color 160ms var(--ease-standard),
+    background 160ms var(--ease-standard),
+    box-shadow 160ms var(--ease-standard),
+    transform 160ms var(--ease-standard);
 }
 
 .sidebar-bottom-btn:hover {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--outline-soft));
+  background: var(--surface-hover);
+  box-shadow: var(--shadow-1);
+  transform: translateY(-1px);
 }
 
 .sidebar-bottom-btn-full {
@@ -304,20 +329,21 @@
   max-height: 520px;
   overflow-y: auto;
   padding: 8px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-panel) 94%, black 6%);
-  box-shadow: 0 22px 46px rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-3);
   display: flex;
   flex-direction: column;
   gap: 4px;
   z-index: 20;
+  animation: sidebar-menu-enter 170ms var(--ease-emphasized);
 }
 
 .sidebar-theme-category + .sidebar-theme-category {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--outline-soft) 72%, transparent);
 }
 
 .sidebar-theme-category-title {
@@ -336,18 +362,26 @@
   gap: 8px;
   padding: 8px 10px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: none;
   color: var(--text-muted);
   font-size: 12px;
   text-align: left;
   cursor: pointer;
+  transition:
+    color 150ms var(--ease-standard),
+    background 150ms var(--ease-standard),
+    transform 150ms var(--ease-standard);
 }
 
 .sidebar-theme-item:hover,
 .sidebar-theme-item.active {
   color: var(--text);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  background: var(--surface-hover);
+}
+
+.sidebar-theme-item:hover {
+  transform: translateX(2px);
 }
 
 .sidebar-theme-dot {
@@ -361,4 +395,15 @@
   color: var(--success);
   font-size: 11px;
   font-weight: 700;
+}
+
+@keyframes sidebar-menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

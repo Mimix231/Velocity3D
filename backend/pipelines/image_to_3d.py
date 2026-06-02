@@ -83,6 +83,9 @@ class ImageTo3DPipeline:
         output_dir: Path,
         cancellation_event: threading.Event,
         prompt: Optional[str] = None,
+        max_dim: int = 512,
+        volume_depth: int = 64,
+        smooth_sigma: float = 1.5,
     ) -> str:
         """
         Generate a 3D mesh from an image.
@@ -106,7 +109,7 @@ class ImageTo3DPipeline:
             raise UnsupportedImageError(f"Cannot decode image: {exc}") from exc
 
         # Resize to 512px on the long edge — good balance of quality vs speed
-        max_dim = 512
+        max_dim = max(256, min(1024, int(max_dim)))
         w, h = image.size
         if max(w, h) > max_dim:
             scale = max_dim / max(w, h)
@@ -128,7 +131,11 @@ class ImageTo3DPipeline:
 
         # ── Depth → mesh ──────────────────────────────────────────────────────
         try:
-            vertices, faces = _depth_to_mesh(depth_map)
+            vertices, faces = _depth_to_mesh(
+                depth_map,
+                volume_depth=max(24, min(160, int(volume_depth))),
+                smooth_sigma=max(0.4, min(4.0, float(smooth_sigma))),
+            )
         except Exception as exc:
             raise ImageTo3DError(f"Mesh reconstruction failed: {exc}") from exc
 

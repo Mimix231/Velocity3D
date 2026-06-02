@@ -3,8 +3,9 @@ from __future__ import annotations
 import os
 import threading
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
+from backend.pipelines.generation_presets import resolve_generation_preset
 from backend.providers.base import (
     GenerationProvider,
     ProviderConfigurationError,
@@ -66,15 +67,16 @@ class TrellisProvider(GenerationProvider):
                 self._text_pipeline.cuda()
         return self._text_pipeline
 
-    def _export_glb(self, outputs, output_dir: Path, stem: str) -> str:
+    def _export_glb(self, outputs, output_dir: Path, stem: str, pipeline_options: Any = None) -> str:
+        preset = resolve_generation_preset(pipeline_options)
         try:
             from trellis.utils import postprocessing_utils
 
             glb = postprocessing_utils.to_glb(
                 outputs["gaussian"][0],
                 outputs["mesh"][0],
-                simplify=0.95,
-                texture_size=1024,
+                simplify=preset.trellis_simplify,
+                texture_size=preset.trellis_texture_size,
             )
         except Exception as exc:  # pragma: no cover - depends on vendor stack
             raise ProviderExecutionError(f"TRELLIS export failed: {exc}") from exc
@@ -88,6 +90,7 @@ class TrellisProvider(GenerationProvider):
         prompt: str,
         output_dir: Path,
         cancellation_event: threading.Event,
+        pipeline_options: Any = None,
     ) -> str:
         if cancellation_event.is_set():
             raise ProviderExecutionError("Generation cancelled before model execution")
@@ -102,7 +105,7 @@ class TrellisProvider(GenerationProvider):
         if cancellation_event.is_set():
             raise ProviderExecutionError("Generation cancelled after model execution")
 
-        return self._export_glb(outputs, output_dir, f"trellis_{prompt}")
+        return self._export_glb(outputs, output_dir, f"trellis_{prompt}", pipeline_options)
 
     def generate_image(
         self,
@@ -110,6 +113,7 @@ class TrellisProvider(GenerationProvider):
         output_dir: Path,
         cancellation_event: threading.Event,
         prompt: Optional[str] = None,
+        pipeline_options: Any = None,
     ) -> str:
         if cancellation_event.is_set():
             raise ProviderExecutionError("Generation cancelled before model execution")
@@ -125,7 +129,7 @@ class TrellisProvider(GenerationProvider):
         if cancellation_event.is_set():
             raise ProviderExecutionError("Generation cancelled after model execution")
 
-        return self._export_glb(outputs, output_dir, f"trellis_{prompt or 'image'}")
+        return self._export_glb(outputs, output_dir, f"trellis_{prompt or 'image'}", pipeline_options)
 
 
 class Trellis2Provider(GenerationProvider):
@@ -163,18 +167,20 @@ class Trellis2Provider(GenerationProvider):
         output_dir: Path,
         cancellation_event: threading.Event,
         prompt: Optional[str] = None,
+        pipeline_options: Any = None,
     ) -> str:
         if cancellation_event.is_set():
             raise ProviderExecutionError("Generation cancelled before model execution")
 
         image = decode_image_bytes(image_bytes).convert("RGB")
         pipeline = self._get_pipeline()
+        preset = resolve_generation_preset(pipeline_options)
 
         try:
             import o_voxel
 
             mesh = pipeline.run(image)[0]
-            mesh.simplify(16777216)
+            mesh.simplify(max(1, preset.trellis2_decimation_target))
             glb = o_voxel.postprocess.to_glb(
                 vertices=mesh.vertices,
                 faces=mesh.faces,
@@ -183,8 +189,8 @@ class Trellis2Provider(GenerationProvider):
                 attr_layout=mesh.layout,
                 voxel_size=mesh.voxel_size,
                 aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
-                decimation_target=1000000,
-                texture_size=2048,
+                decimation_target=preset.trellis2_decimation_target,
+                texture_size=preset.trellis2_texture_size,
                 remesh=True,
                 remesh_band=1,
                 remesh_project=0,

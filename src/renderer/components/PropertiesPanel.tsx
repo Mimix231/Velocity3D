@@ -1,5 +1,5 @@
 import React from 'react'
-import type { TextureOptions } from '../api/generationApi'
+import type { PipelineOptions, PipelinePresetId, TextureOptions } from '../api/generationApi'
 import type { GenerationMode, ModelCatalogItem, ModelInstallStatusResponse } from '../api/modelApi'
 import { useGenerationStore } from '../stores/generationStore'
 import './PropertiesPanel.css'
@@ -27,8 +27,10 @@ interface Props {
   selectedModel?: ModelCatalogItem | null
   inputImage?: InputImagePreview | null
   textureOptions: TextureOptions
+  pipelineOptions: PipelineOptions
   installSession?: (ModelInstallStatusResponse & { mode: GenerationMode }) | null
   onTextureOptionsChange: (next: TextureOptions) => void
+  onPipelineOptionsChange: (next: PipelineOptions) => void
   onInstallModel: (modelId: string, mode: GenerationMode) => void
   onOpenModelLibrary: () => void
   onUpdateObjectTransform?: (
@@ -50,8 +52,24 @@ interface InputsSectionProps {
   selectedModel?: ModelCatalogItem | null
   inputImage?: InputImagePreview | null
   textureOptions: TextureOptions
+  pipelineOptions: PipelineOptions
   onTextureOptionsChange: (next: TextureOptions) => void
+  onPipelineOptionsChange: (next: PipelineOptions) => void
 }
+
+const PIPELINE_PRESETS: Array<{
+  id: PipelinePresetId
+  label: string
+  detail: string
+  faces: number
+  texture: number
+}> = [
+  { id: 'preview', label: 'Preview', detail: 'Fast tests with smaller textures and light meshes.', faces: 25000, texture: 1024 },
+  { id: 'balanced', label: 'Balanced', detail: 'General local quality without pushing the machine too hard.', faces: 80000, texture: 2048 },
+  { id: 'building_module', label: 'Building Module', detail: 'Sharp lower-poly hard-surface output for modular kits.', faces: 35000, texture: 1024 },
+  { id: 'game_asset', label: 'Game Asset', detail: 'Game-ready density with more texture budget.', faces: 50000, texture: 2048 },
+  { id: 'production', label: 'Production', detail: 'Higher mesh and texture budgets for final exports.', faces: 200000, texture: 4096 },
+]
 
 function Vec3Row({ label, value }: { label: string; value: { x: number; y: number; z: number } }) {
   const fmt = (n: number) => n.toFixed(3)
@@ -137,8 +155,37 @@ function InputsSection({
   selectedModel,
   inputImage,
   textureOptions,
+  pipelineOptions,
   onTextureOptionsChange,
+  onPipelineOptionsChange,
 }: InputsSectionProps) {
+  const activePreset = PIPELINE_PRESETS.find((preset) => preset.id === pipelineOptions.preset) ?? PIPELINE_PRESETS[2]
+
+  const updatePreset = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const preset = PIPELINE_PRESETS.find((item) => item.id === event.target.value) ?? PIPELINE_PRESETS[2]
+    onPipelineOptionsChange({
+      preset: preset.id,
+      target_face_count: undefined,
+      texture_size: undefined,
+    })
+  }
+
+  const updateTargetFaces = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(event.target.value)
+    onPipelineOptionsChange({
+      ...pipelineOptions,
+      target_face_count: Number.isFinite(value) && value > 0 ? value : undefined,
+    })
+  }
+
+  const updateTextureSize = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(event.target.value)
+    onPipelineOptionsChange({
+      ...pipelineOptions,
+      texture_size: Number.isFinite(value) && value > 0 ? value : undefined,
+    })
+  }
+
   const updateTextureEnabled = (event: React.ChangeEvent<HTMLInputElement>) => {
     onTextureOptionsChange({
       ...textureOptions,
@@ -196,6 +243,39 @@ function InputsSection({
       <div className="prop-row">
         <span className="prop-label">Provider</span>
         <span className="prop-value">{selectedModel?.name ?? 'Not selected'}</span>
+      </div>
+      <label className="settings-field">
+        <span>Pipeline preset</span>
+        <select value={pipelineOptions.preset} onChange={updatePreset}>
+          {PIPELINE_PRESETS.map((preset) => (
+            <option key={preset.id} value={preset.id}>{preset.label}</option>
+          ))}
+        </select>
+      </label>
+      <div className="pipeline-preset-note">{activePreset.detail}</div>
+      <div className="settings-grid">
+        <label className="settings-field compact">
+          <span>Target faces</span>
+          <input
+            type="number"
+            min={1000}
+            max={2000000}
+            step={1000}
+            value={pipelineOptions.target_face_count ?? activePreset.faces}
+            onChange={updateTargetFaces}
+          />
+        </label>
+        <label className="settings-field compact">
+          <span>Texture px</span>
+          <input
+            type="number"
+            min={512}
+            max={4096}
+            step={512}
+            value={pipelineOptions.texture_size ?? activePreset.texture}
+            onChange={updateTextureSize}
+          />
+        </label>
       </div>
       <label className="settings-toggle">
         <input
@@ -386,8 +466,10 @@ export default function PropertiesPanel({
   selectedModel,
   inputImage,
   textureOptions,
+  pipelineOptions,
   installSession,
   onTextureOptionsChange,
+  onPipelineOptionsChange,
   onInstallModel,
   onOpenModelLibrary,
   onUpdateObjectTransform,
@@ -419,7 +501,9 @@ export default function PropertiesPanel({
           selectedModel={selectedModel}
           inputImage={inputImage}
           textureOptions={textureOptions}
+          pipelineOptions={pipelineOptions}
           onTextureOptionsChange={onTextureOptionsChange}
+          onPipelineOptionsChange={onPipelineOptionsChange}
         />
         {!selectedObject ? (
           <>

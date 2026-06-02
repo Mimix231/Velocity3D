@@ -48,6 +48,12 @@ def checkpoints_root() -> Path:
     return root
 
 
+def runtime_root() -> Path:
+    root = base_dir() / "Runtimes"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
 def configure_huggingface_cache() -> Path:
     root = huggingface_root()
     hub_cache = huggingface_hub_cache()

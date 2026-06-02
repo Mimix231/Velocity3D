@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import threading
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from backend.providers.base import (
     GenerationProvider,
@@ -41,6 +41,7 @@ class _RepoRunScriptProvider(GenerationProvider):
         output_dir: Path,
         cancellation_event: threading.Event,
         prompt: Optional[str] = None,
+        pipeline_options: Any = None,
     ) -> str:
         if cancellation_event.is_set():
             raise ProviderExecutionError("Generation cancelled before model execution")

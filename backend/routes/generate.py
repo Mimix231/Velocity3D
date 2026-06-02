@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 
 from backend.models import GenerationMetadata, GenerationRequest, GenerationResponse
 from backend.pipelines.bpy_post import BpyPostProcessor, BpyPostProcessorError
+from backend.pipelines.generation_presets import GenerationPreset, resolve_generation_preset
 from backend.pipelines.hunyuan_paint import HunyuanPaintPipeline, supports_hunyuan_paint
 from backend.pipelines.texture_to_image import (
     DEFAULT_TEXTURE_CHECKPOINT,
@@ -75,7 +76,16 @@ def get_cancellation_event(request_id: str) -> threading.Event | None:
 @router.post("/generate")
 async def generate(req: GenerationRequest):
     start = time.time()
-    logger.info("POST /generate type=%s model=%s request_id=%s", req.type, req.model_id, req.request_id)
+    pipeline_preset = resolve_generation_preset(req.pipeline_options)
+    logger.info(
+        "POST /generate type=%s model=%s preset=%s target_faces=%s texture=%s request_id=%s",
+        req.type,
+        req.model_id,
+        pipeline_preset.id,
+        pipeline_preset.target_face_count,
+        pipeline_preset.trellis_texture_size,
+        req.request_id,
+    )
 
     cancellation_event = _register_event(req.request_id)
 
@@ -106,14 +116,25 @@ async def generate(req: GenerationRequest):
 
         if req.type == "text":
             output_path = await _run_in_executor(
-                lambda: provider.generate_text(req.prompt or "", OUTPUT_DIR, cancellation_event)
+                lambda: provider.generate_text(
+                    req.prompt or "",
+                    OUTPUT_DIR,
+                    cancellation_event,
+                    pipeline_options=pipeline_preset,
+                )
             )
         else:
             image_bytes = base64.b64decode(req.image_base64 or "")
             if image_reference_bytes is None:
                 image_reference_bytes = image_bytes
             output_path = await _run_in_executor(
-                lambda: provider.generate_image(image_bytes, OUTPUT_DIR, cancellation_event, prompt=req.prompt)
+                lambda: provider.generate_image(
+                    image_bytes,
+                    OUTPUT_DIR,
+                    cancellation_event,
+                    prompt=req.prompt,
+                    pipeline_options=pipeline_preset,
+                )
             )
 
         if req.texture_options and req.texture_options.enabled:
@@ -134,6 +155,7 @@ async def generate(req: GenerationRequest):
                     cancellation_event=cancellation_event,
                     reference_image_bytes=image_reference_bytes,
                     model_id=entry.id,
+                    pipeline_preset=pipeline_preset,
                 )
             )
             output_path = texture_result.output_path
@@ -185,6 +207,9 @@ async def generate(req: GenerationRequest):
             texture_checkpoint=texture_checkpoint,
             material_texture_dir=material_texture_dir,
             material_textures=material_textures,
+            pipeline_preset=pipeline_preset.id,
+            target_face_count=pipeline_preset.target_face_count,
+            texture_size=pipeline_preset.trellis_texture_size,
         ),
     )
     logger.info("POST /generate done in %dms -> %s", elapsed_ms, output_path)
@@ -345,6 +370,7 @@ def _apply_ai_texture(
     cancellation_event: threading.Event,
     reference_image_bytes: bytes | None = None,
     model_id: str | None = None,
+    pipeline_preset: GenerationPreset | None = None,
 ) -> TextureApplicationResult:
     TEXTURE_DIR.mkdir(parents=True, exist_ok=True)
     texture_path = TEXTURE_DIR / f"{request_id}_albedo.png"
@@ -367,6 +393,7 @@ def _apply_ai_texture(
             output_glb=OUTPUT_DIR / f"{Path(source_glb).stem}_hunyuan_paint_textured.glb",
             work_dir=paint_work_dir,
             cancellation_event=cancellation_event,
+            pipeline_preset=pipeline_preset,
         )
         logger.info("Hunyuan3D-Paint textured GLB export complete for %s: %s", request_id, output_path.output_path)
         return TextureApplicationResult(

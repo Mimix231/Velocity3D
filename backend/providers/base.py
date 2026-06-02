@@ -3,7 +3,7 @@ from __future__ import annotations
 import threading
 from abc import ABC
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 
 class ProviderError(Exception):
@@ -35,6 +35,7 @@ class GenerationProvider(ABC):
         prompt: str,
         output_dir: Path,
         cancellation_event: threading.Event,
+        pipeline_options: Any = None,
     ) -> str:
         raise ProviderCapabilityError(f"{self.model_id} does not support text-to-3D generation")
 
@@ -44,5 +45,6 @@ class GenerationProvider(ABC):
         output_dir: Path,
         cancellation_event: threading.Event,
         prompt: Optional[str] = None,
+        pipeline_options: Any = None,
     ) -> str:
         raise ProviderCapabilityError(f"{self.model_id} does not support image-to-3D generation")

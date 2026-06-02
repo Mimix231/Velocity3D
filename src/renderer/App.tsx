@@ -2,7 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
 import './App.css'
-import type { GenerationMetadata, GenerationResponse, LatestGeneratedOutput, TextureOptions } from './api/generationApi'
+import type {
+  GenerationMetadata,
+  GenerationResponse,
+  LatestGeneratedOutput,
+  PipelineOptions,
+  TextureOptions
+} from './api/generationApi'
 import {
   fetchModelInstallStatus,
   startModelInstall,
@@ -34,8 +40,16 @@ type GenerationRaceResult =
   | { source: 'response'; response: GenerationResponse }
   | { source: 'fallback'; output: LatestGeneratedOutput }
 const TEXTURE_SETTINGS_STORAGE_KEY = 'velocity3d-texture-settings'
+const PIPELINE_SETTINGS_STORAGE_KEY = 'velocity3d-pipeline-settings'
 const DEFAULT_TEXTURE_CHECKPOINT = 'stabilityai/stable-diffusion-xl-base-1.0'
 const TEXTURED_OUTPUT_WAIT_LIMIT_MS = 30 * 60 * 1000
+const VALID_PIPELINE_PRESETS = new Set<PipelineOptions['preset']>([
+  'preview',
+  'balanced',
+  'building_module',
+  'game_asset',
+  'production',
+])
 
 function loadTextureSettings(): TextureOptions {
   try {
@@ -53,6 +67,26 @@ function loadTextureSettings(): TextureOptions {
   }
 }
 
+function loadPipelineSettings(): PipelineOptions {
+  try {
+    const raw = localStorage.getItem(PIPELINE_SETTINGS_STORAGE_KEY)
+    if (!raw) {
+      return { preset: 'building_module' }
+    }
+    const parsed = JSON.parse(raw) as Partial<PipelineOptions>
+    const preset = VALID_PIPELINE_PRESETS.has(parsed.preset as PipelineOptions['preset'])
+      ? parsed.preset as PipelineOptions['preset']
+      : 'building_module'
+    return {
+      preset,
+      target_face_count: Number.isFinite(parsed.target_face_count) ? parsed.target_face_count : undefined,
+      texture_size: Number.isFinite(parsed.texture_size) ? parsed.texture_size : undefined,
+    }
+  } catch {
+    return { preset: 'building_module' }
+  }
+}
+
 export default function App() {
   const [phase, setPhase] = useState<Phase>('loading')
   const [selectedObject, setSelectedObject] = useState<ObjectProperties | null>(null)
@@ -61,6 +95,7 @@ export default function App() {
   const [generationMode, setGenerationMode] = useState<GenerationMode>('text')
   const [installSession, setInstallSession] = useState<InstallSession | null>(null)
   const [textureOptions, setTextureOptions] = useState<TextureOptions>(() => loadTextureSettings())
+  const [pipelineOptions, setPipelineOptions] = useState<PipelineOptions>(() => loadPipelineSettings())
   const [inputImage, setInputImage] = useState<InputImagePreview | null>(null)
   const [viewportTransformCommand, setViewportTransformCommand] = useState<ViewportTransformCommand | null>(null)
 
@@ -90,6 +125,14 @@ export default function App() {
       // Ignore persistence failures.
     }
   }, [textureOptions])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(PIPELINE_SETTINGS_STORAGE_KEY, JSON.stringify(pipelineOptions))
+    } catch {
+      // Ignore persistence failures.
+    }
+  }, [pipelineOptions])
 
   useEffect(() => {
     window.velocityAPI.getConfig().then((cfg) => {
@@ -279,6 +322,7 @@ export default function App() {
       prompt,
       model_id: selectedTextModel.id,
       texture_options: textureOptions.enabled ? textureOptions : undefined,
+      pipeline_options: pipelineOptions,
       request_id: reqId
     })
     const outputPoll = createGeneratedOutputPoll(startedAtMs, Boolean(textureOptions.enabled))
@@ -298,6 +342,7 @@ export default function App() {
           selectedModel: selectedTextModel,
           startedAtMs,
           textureOptions,
+          pipelineOptions,
         })
 
       success(res.model_path)
@@ -348,6 +393,7 @@ export default function App() {
         prompt,
         model_id: selectedImageModel.id,
         texture_options: textureOptions.enabled ? textureOptions : undefined,
+        pipeline_options: pipelineOptions,
         request_id: reqId
       })
       outputPoll = createGeneratedOutputPoll(startedAtMs, Boolean(textureOptions.enabled))
@@ -366,6 +412,7 @@ export default function App() {
           selectedModel: selectedImageModel,
           startedAtMs,
           textureOptions,
+          pipelineOptions,
         })
 
       success(res.model_path)
@@ -540,7 +587,9 @@ export default function App() {
             selectedModel={activeSelectedModel}
             inputImage={inputImage}
             textureOptions={textureOptions}
+            pipelineOptions={pipelineOptions}
             onTextureOptionsChange={setTextureOptions}
+            onPipelineOptionsChange={setPipelineOptions}
             installSession={installSession}
             onInstallModel={handleStartInstall}
             onOpenModelLibrary={() => setShowModelLibrary(true)}
@@ -687,12 +736,14 @@ function buildFallbackGenerationResponse({
   selectedModel,
   startedAtMs,
   textureOptions,
+  pipelineOptions,
 }: {
   requestId: string
   output: LatestGeneratedOutput
   selectedModel: NonNullable<ReturnType<typeof getSelectedModel>>
   startedAtMs: number
   textureOptions: TextureOptions
+  pipelineOptions: PipelineOptions
 }): GenerationResponse {
   const metadata: GenerationMetadata = {
     vertex_count: output.vertex_count,
@@ -705,6 +756,9 @@ function buildFallbackGenerationResponse({
     texture_checkpoint: textureOptions.enabled ? textureOptions.checkpoint ?? null : null,
     material_texture_dir: null,
     material_textures: [],
+    pipeline_preset: pipelineOptions.preset,
+    target_face_count: pipelineOptions.target_face_count ?? null,
+    texture_size: pipelineOptions.texture_size ?? null,
   }
 
   return {

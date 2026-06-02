@@ -11,6 +11,9 @@ export interface GenerationMetadata {
   texture_checkpoint?: string | null
   material_texture_dir?: string | null
   material_textures?: string[]
+  pipeline_preset?: string
+  target_face_count?: number | null
+  texture_size?: number | null
 }
 
 export interface HistoryEntry {

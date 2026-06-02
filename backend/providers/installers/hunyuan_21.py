@@ -169,6 +169,10 @@ def _paint_runtime_phase() -> list[InstallPlanStep]:
             "The native CUDA rasterizer must be built against the same CUDA major/minor as the backend PyTorch wheel. "
             "RealESRGAN is treated as optional because Velocity3D can run the paint pass without super-resolution."
         ),
+        action(
+            "Patch Hunyuan 2.1 paint, DifferentiableRenderer, and custom_rasterizer sources",
+            "patch_hunyuan21_paint_sources",
+        ),
         InstallPlanStep(
             label="Build Hunyuan 2.1 paint CUDA rasterizer",
             action="build_hunyuan21_custom_rasterizer",
@@ -176,6 +180,10 @@ def _paint_runtime_phase() -> list[InstallPlanStep]:
         InstallPlanStep(
             label="Build Hunyuan 2.1 mesh inpaint processor",
             action="build_hunyuan21_mesh_inpaint_processor",
+        ),
+        action(
+            "Materialize Velocity3D-owned Hunyuan 2.1 paint runtime",
+            "materialize_hunyuan21_paint_runtime",
         ),
     ]
 

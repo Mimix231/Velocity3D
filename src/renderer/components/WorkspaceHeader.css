@@ -3,10 +3,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 18px;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-panel) 96%, white 4%) 0%, color-mix(in srgb, var(--bg-panel) 90%, black 10%) 100%);
+  padding: 12px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline-soft) 76%, transparent);
+  background: color-mix(in srgb, var(--surface-1) 96%, black 4%);
 }
 
 .workspace-heading {
@@ -31,8 +30,8 @@
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
 }
 
 .workspace-breadcrumb-copy {
@@ -52,11 +51,22 @@
 }
 
 .workspace-model-summary {
-  min-width: 126px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
-  background: color-mix(in srgb, var(--bg) 42%, transparent);
+  min-width: 132px;
+  padding: 9px 11px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition:
+    border-color 160ms var(--ease-standard),
+    background 160ms var(--ease-standard),
+    transform 160ms var(--ease-standard);
+}
+
+.workspace-model-summary:hover {
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--outline-soft));
+  background: var(--surface-hover);
+  transform: translateY(-1px);
 }
 
 .workspace-model-label {
@@ -92,9 +102,9 @@
   gap: 6px;
   padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 70%, white 30%);
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .workspace-model-badge.pending,
@@ -120,11 +130,11 @@
   min-height: 28px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text-muted);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .workspace-status-dot {
@@ -137,17 +147,24 @@
 .workspace-library-button {
   min-height: 40px;
   padding: 0 16px;
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--accent) 10%, var(--bg-panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--outline-soft));
+  border-radius: 999px;
+  background: var(--surface-active);
   color: var(--text);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
-  transition: border-color 0.16s ease, background 0.16s ease;
+  box-shadow: var(--shadow-1);
+  transition:
+    border-color 180ms var(--ease-standard),
+    background 180ms var(--ease-standard),
+    box-shadow 180ms var(--ease-standard),
+    transform 180ms var(--ease-standard);
 }
 
 .workspace-library-button:hover {
-  border-color: color-mix(in srgb, var(--accent) 44%, var(--border));
-  background: color-mix(in srgb, var(--accent) 14%, var(--bg-panel));
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--outline-strong));
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface-2));
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 18%, transparent), var(--shadow-1);
+  transform: translateY(-1px);
 }

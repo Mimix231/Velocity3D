@@ -51,6 +51,7 @@ from backend.providers.helpers import (
 from backend.providers.hunyuan_provider import Hunyuan20Provider, Hunyuan21Provider
 from backend.providers.shap_e_provider import ShapEProvider
 from backend.providers.trellis_provider import Trellis2Provider, TrellisProvider
+from backend.runtimes.hunyuan21_paint import materialize_hunyuan21_paint_runtime
 
 
 PROVIDER_MAP = {
@@ -428,6 +429,16 @@ def _patch_hunyuan21_shape_init(entry: CatalogEntry, job: InstallJob) -> None:
     init_path.write_text(content, encoding="utf-8")
     job.append_log(f"Patched shape-only package exports: {init_path}")
 
+
+def _patch_hunyuan21_paint_sources(entry: CatalogEntry, job: InstallJob) -> None:
+    if not entry.vendor_dir_name:
+        raise ProviderConfigurationError(f"{entry.name} has no repo directory to patch.")
+
+    repo_dir = repo_path(entry.vendor_dir_name)
+    paint_dir = repo_dir / "hy3dpaint"
+    if not paint_dir.exists():
+        raise ProviderConfigurationError(f"Expected Hunyuan 2.1 paint directory was not found: {paint_dir}")
+
     paint_pipeline_path = repo_path(entry.vendor_dir_name) / "hy3dpaint" / "textureGenPipeline.py"
     if paint_pipeline_path.exists():
         paint_content = paint_pipeline_path.read_text(encoding="utf-8")
@@ -440,6 +451,251 @@ def _patch_hunyuan21_shape_init(entry: CatalogEntry, job: InstallJob) -> None:
             job.append_log(
                 "Patched Hunyuan3D-Paint view resize loop so every generated view is resized before UV baking."
             )
+        else:
+            job.append_log("Hunyuan3D-Paint view resize loop patch is already applied.")
+
+    paint_pbr_pipeline_path = paint_dir / "hunyuanpaintpbr" / "pipeline.py"
+    if paint_pbr_pipeline_path.exists():
+        pbr_content = paint_pbr_pipeline_path.read_text(encoding="utf-8")
+        patched_pbr = pbr_content
+        if "vae_param = next(self.vae.parameters())" not in patched_pbr:
+            patched_pbr = patched_pbr.replace(
+                "        dtype = next(self.vae.parameters()).dtype\n"
+                "        images = (images - 0.5) * 2.0\n"
+                "        posterior = self.vae.encode(images.to(dtype)).latent_dist\n",
+                "        vae_param = next(self.vae.parameters())\n"
+                "        dtype = vae_param.dtype\n"
+                "        images = (images - 0.5) * 2.0\n"
+                "        images = images.to(device=vae_param.device, dtype=dtype)\n"
+                "        posterior = self.vae.encode(images).latent_dist\n",
+            )
+        patched_pbr = patched_pbr.replace(
+            "        images_vae = images_vae.to(device=self.vae.device, dtype=self.unet.dtype)\n",
+            "        images_vae = images_vae.to(device=next(self.vae.parameters()).device, dtype=self.unet.dtype)\n",
+        )
+        if "target_device = next(self.vae.parameters()).device" not in patched_pbr:
+            patched_pbr = patched_pbr.replace(
+                "        def convert_pil_list_to_tensor(images):\n"
+                "            bg_c = [1.0, 1.0, 1.0]\n",
+                "        def convert_pil_list_to_tensor(images):\n"
+                "            target_device = next(self.vae.parameters()).device\n"
+                "            bg_c = [1.0, 1.0, 1.0]\n",
+            )
+        patched_pbr = patched_pbr.replace(
+            '                    img = torch.from_numpy(img).permute(2, 0, 1).unsqueeze(0).contiguous().half().to("cuda")\n',
+            "                    img = torch.from_numpy(img).permute(2, 0, 1).unsqueeze(0).contiguous()\n"
+            "                    img = img.to(device=target_device, dtype=self.unet.dtype)\n",
+        )
+        if "target_device = next(self.unet.parameters()).device" not in patched_pbr:
+            patched_pbr = patched_pbr.replace(
+                "        if guidance_scale > 1:\n",
+                "        target_device = next(self.unet.parameters()).device\n"
+                "        target_dtype = next(self.unet.parameters()).dtype\n"
+                "        prompt_embeds = prompt_embeds.to(device=target_device, dtype=target_dtype)\n"
+                "        negative_prompt_embeds = negative_prompt_embeds.to(device=target_device, dtype=target_dtype)\n"
+                "\n"
+                "        if guidance_scale > 1:\n",
+            )
+        if patched_pbr != pbr_content:
+            paint_pbr_pipeline_path.write_text(patched_pbr, encoding="utf-8")
+            job.append_log(
+                "Patched Hunyuan3D-Paint PBR tensor conversion to use the active CUDA devices for VAE, UNet, and prompt embeds."
+            )
+        else:
+            job.append_log("Hunyuan3D-Paint PBR tensor-device patch is already applied.")
+
+    dino_modules_path = paint_dir / "hunyuanpaintpbr" / "unet" / "modules.py"
+    if dino_modules_path.exists():
+        dino_content = dino_modules_path.read_text(encoding="utf-8")
+        patched_dino = dino_content.replace(
+            "        else:\n"
+            "            batch_size = 1\n"
+            "            dino_proceesed_images = self.dino_processor(images=images, return_tensors=\"pt\").pixel_values\n"
+            "            dino_proceesed_images = torch.stack(\n"
+            "                [torch.from_numpy(np.array(image)) for image in dino_proceesed_images], dim=0\n"
+            "            )\n"
+            "        dino_param = next(self.dino_v2.parameters())\n"
+            "        dino_proceesed_images = dino_proceesed_images.to(dino_param)\n",
+            "        else:\n"
+            "            batch_size = 1\n"
+            "            dino_proceesed_images = self.dino_processor(images=images, return_tensors=\"pt\").pixel_values\n"
+            "        dino_param = next(self.dino_v2.parameters())\n"
+            "        dino_proceesed_images = dino_proceesed_images.to(device=dino_param.device, dtype=dino_param.dtype)\n",
+        ).replace(
+            "        dino_hidden_states = rearrange(dino_hidden_states.to(dino_param), \"(b n) l c -> b (n l) c\", b=batch_size)\n",
+            "        dino_hidden_states = rearrange(\n"
+            "            dino_hidden_states.to(device=dino_param.device, dtype=dino_param.dtype),\n"
+            "            \"(b n) l c -> b (n l) c\",\n"
+            "            b=batch_size,\n"
+            "        )\n",
+        )
+        if patched_dino != dino_content:
+            dino_modules_path.write_text(patched_dino, encoding="utf-8")
+            job.append_log("Patched Hunyuan3D-Paint DINO wrapper to keep processed image tensors on the DINO CUDA device.")
+        else:
+            job.append_log("Hunyuan3D-Paint DINO device patch is already applied.")
+
+        mda_content = dino_modules_path.read_text(encoding="utf-8")
+        patched_mda = mda_content
+        if "def _velocity3d_ensure_mda_processor" not in patched_mda:
+            patched_mda = patched_mda.replace(
+                "    def __getattr__(self, name: str):\n",
+                "    def _velocity3d_ensure_mda_processor(self):\n"
+                "        if not self.use_mda:\n"
+                "            return\n"
+                "        if self.attn1.processor.__class__.__name__ == \"SelfAttnProcessor2_0\":\n"
+                "            return\n"
+                "\n"
+                "        self.attn1.set_processor(\n"
+                "            SelfAttnProcessor2_0(\n"
+                "                query_dim=self.dim,\n"
+                "                heads=self.num_attention_heads,\n"
+                "                dim_head=self.attention_head_dim,\n"
+                "                dropout=self.dropout,\n"
+                "                bias=self.attention_bias,\n"
+                "                cross_attention_dim=None,\n"
+                "                upcast_attention=self.attn1.upcast_attention,\n"
+                "                out_bias=True,\n"
+                "                pbr_setting=self.pbr_setting,\n"
+                "            )\n"
+                "        )\n"
+                "        for token in self.pbr_setting:\n"
+                "            if token == \"albedo\":\n"
+                "                continue\n"
+                "            getattr(self.attn1.processor, f\"to_q_{token}\").load_state_dict(self.attn1.to_q.state_dict())\n"
+                "            getattr(self.attn1.processor, f\"to_k_{token}\").load_state_dict(self.attn1.to_k.state_dict())\n"
+                "            getattr(self.attn1.processor, f\"to_v_{token}\").load_state_dict(self.attn1.to_v.state_dict())\n"
+                "            getattr(self.attn1.processor, f\"to_out_{token}\").load_state_dict(self.attn1.to_out.state_dict())\n"
+                "        self.attn1.processor.to(device=self.attn1.to_q.weight.device, dtype=self.attn1.to_q.weight.dtype)\n"
+                "\n"
+                "    def __getattr__(self, name: str):\n",
+            )
+        if "def _velocity3d_flatten_pbr_attention" not in patched_mda:
+            patched_mda = patched_mda.replace(
+                "    def __getattr__(self, name: str):\n",
+                "    def _velocity3d_flatten_pbr_attention(self, attn_output, num_in_batch, n_pbr, flat_batch_size, label):\n"
+                "        if attn_output.ndim == 5:\n"
+                "            return rearrange(attn_output, \"b n_pbr n l c -> (b n_pbr n) l c\", n=num_in_batch, n_pbr=n_pbr)\n"
+                "\n"
+                "        if attn_output.ndim == 4:\n"
+                "            if attn_output.shape[1] == n_pbr:\n"
+                "                return rearrange(attn_output, \"b n_pbr (n l) c -> (b n_pbr n) l c\", n=num_in_batch, n_pbr=n_pbr)\n"
+                "            if attn_output.shape[1] == num_in_batch:\n"
+                "                attn_output = attn_output.unsqueeze(1).repeat(1, n_pbr, 1, 1, 1)\n"
+                "                return rearrange(attn_output, \"b n_pbr n l c -> (b n_pbr n) l c\")\n"
+                "            if attn_output.shape[0] % n_pbr == 0:\n"
+                "                return rearrange(attn_output, \"(b n_pbr) n l c -> (b n_pbr n) l c\", n_pbr=n_pbr)\n"
+                "\n"
+                "        if attn_output.ndim == 3:\n"
+                "            if attn_output.shape[0] == flat_batch_size:\n"
+                "                return attn_output\n"
+                "            base_batch = max(1, flat_batch_size // max(1, n_pbr * num_in_batch))\n"
+                "            if attn_output.shape[0] == base_batch and attn_output.shape[1] % num_in_batch == 0:\n"
+                "                attn_output = rearrange(attn_output, \"b (n l) c -> b n l c\", n=num_in_batch)\n"
+                "                attn_output = attn_output.unsqueeze(1).repeat(1, n_pbr, 1, 1, 1)\n"
+                "                return rearrange(attn_output, \"b n_pbr n l c -> (b n_pbr n) l c\")\n"
+                "            if attn_output.shape[0] == base_batch * n_pbr and attn_output.shape[1] % num_in_batch == 0:\n"
+                "                return rearrange(attn_output, \"(b n_pbr) (n l) c -> (b n_pbr n) l c\", n_pbr=n_pbr, n=num_in_batch)\n"
+                "\n"
+                "        raise ValueError(\n"
+                "            f\"Velocity3D could not normalize {label} attention output with shape {tuple(attn_output.shape)} \"\n"
+                "            f\"for num_in_batch={num_in_batch}, n_pbr={n_pbr}, flat_batch_size={flat_batch_size}.\"\n"
+                "        )\n"
+                "\n"
+                "    def __getattr__(self, name: str):\n",
+            )
+        if "self._velocity3d_ensure_mda_processor()" not in patched_mda:
+            patched_mda = patched_mda.replace(
+                "        if self.use_mda:\n"
+                "            mda_norm_hidden_states = rearrange(\n",
+                "        if self.use_mda:\n"
+                "            self._velocity3d_ensure_mda_processor()\n"
+                "            mda_norm_hidden_states = rearrange(\n",
+            )
+        if '"material self"' not in patched_mda:
+            patched_mda = patched_mda.replace(
+                '            attn_output = rearrange(attn_output, "b n_pbr n l c -> (b n_pbr n) l c")\n',
+                '            attn_output = self._velocity3d_flatten_pbr_attention(\n'
+                '                attn_output, num_in_batch, N_pbr, hidden_states.shape[0], "material self"\n'
+                '            )\n',
+                1,
+            )
+        if '"reference"' not in patched_mda:
+            patched_mda = patched_mda.replace(
+                '            if attn_output.ndim == 3:\n'
+                '                attn_output = rearrange(attn_output, "b (n l) c -> b n l c", n=num_in_batch)\n'
+                '                attn_output = attn_output.unsqueeze(1).repeat(1, N_pbr, 1, 1, 1)\n'
+                '            elif attn_output.ndim == 4:\n'
+                '                attn_output = rearrange(attn_output, "b n_pbr (n l) c -> b n_pbr n l c", n=num_in_batch, n_pbr=N_pbr)\n'
+                '            attn_output = rearrange(attn_output, "b n_pbr n l c -> (b n_pbr n) l c")\n',
+                '            attn_output = self._velocity3d_flatten_pbr_attention(\n'
+                '                attn_output, num_in_batch, N_pbr, hidden_states.shape[0], "reference"\n'
+                '            )\n',
+            )
+            patched_mda = patched_mda.replace(
+                '            attn_output = rearrange(attn_output, "b n_pbr (n l) c -> (b n_pbr n) l c", n=num_in_batch, n_pbr=N_pbr)\n',
+                '            attn_output = self._velocity3d_flatten_pbr_attention(\n'
+                '                attn_output, num_in_batch, N_pbr, hidden_states.shape[0], "reference"\n'
+                '            )\n',
+            )
+        if '"multiview"' not in patched_mda:
+            patched_mda = patched_mda.replace(
+                '            attn_output = rearrange(attn_output, "(b n_pbr) (n l) c -> (b n_pbr n) l c", n_pbr=N_pbr, n=num_in_batch)\n',
+                '            attn_output = self._velocity3d_flatten_pbr_attention(\n'
+                '                attn_output, num_in_batch, N_pbr, hidden_states.shape[0], "multiview"\n'
+                '            )\n',
+            )
+        if patched_mda != mda_content:
+            dino_modules_path.write_text(patched_mda, encoding="utf-8")
+            job.append_log(
+                "Patched Hunyuan3D-Paint material attention to restore the PBR-aware processor and normalize attention branch shapes."
+            )
+        else:
+            job.append_log("Hunyuan3D-Paint material attention processor patch is already applied.")
+
+    attn_processor_path = paint_dir / "hunyuanpaintpbr" / "unet" / "attn_processor.py"
+    if attn_processor_path.exists():
+        attn_content = attn_processor_path.read_text(encoding="utf-8")
+        attn_marker = "target_states = hidden_states if encoder_hidden_states is None else encoder_hidden_states"
+        patched_attn = attn_content
+        if attn_marker not in patched_attn:
+            patched_attn = patched_attn.replace(
+                "        batch_size, sequence_length, _ = (\n"
+                "            hidden_states.shape if encoder_hidden_states is None else encoder_hidden_states.shape\n"
+                "        )\n",
+                "        target_states = hidden_states if encoder_hidden_states is None else encoder_hidden_states\n"
+                "        if target_states.ndim > 3:\n"
+                "            target_states = target_states.reshape(-1, target_states.shape[-2], target_states.shape[-1])\n"
+                "            if encoder_hidden_states is None:\n"
+                "                hidden_states = target_states\n"
+                "            else:\n"
+                "                encoder_hidden_states = target_states\n"
+                "        batch_size, sequence_length, _ = target_states.shape\n",
+            )
+        if patched_attn != attn_content:
+            attn_processor_path.write_text(patched_attn, encoding="utf-8")
+            job.append_log("Patched Hunyuan3D-Paint attention processor to flatten 4D states before QKV unpacking.")
+        else:
+            job.append_log("Hunyuan3D-Paint attention shape patch is already applied.")
+
+    uvwrap_path = paint_dir / "utils" / "uvwrap_utils.py"
+    if uvwrap_path.exists():
+        uvwrap_content = uvwrap_path.read_text(encoding="utf-8")
+        uvwrap_marker = "atlas_result = xatlas.parametrize(mesh.vertices, mesh.faces)"
+        patched_uvwrap = uvwrap_content
+        if uvwrap_marker not in patched_uvwrap:
+            patched_uvwrap = patched_uvwrap.replace(
+                "    vmapping, indices, uvs = xatlas.parametrize(mesh.vertices, mesh.faces)\n",
+                "    atlas_result = xatlas.parametrize(mesh.vertices, mesh.faces)\n"
+                "    if len(atlas_result) < 3:\n"
+                "        raise ValueError(f\"xatlas.parametrize returned {len(atlas_result)} values; expected at least 3.\")\n"
+                "    vmapping, indices, uvs = atlas_result[:3]\n",
+            )
+        if patched_uvwrap != uvwrap_content:
+            uvwrap_path.write_text(patched_uvwrap, encoding="utf-8")
+            job.append_log("Patched Hunyuan3D-Paint UV unwrap for xatlas versions that return extra values.")
+        else:
+            job.append_log("Hunyuan3D-Paint xatlas return-shape patch is already applied.")
 
     simplify_path = repo_path(entry.vendor_dir_name) / "hy3dpaint" / "utils" / "simplify_mesh_utils.py"
     if simplify_path.exists():
@@ -451,6 +707,8 @@ def _patch_hunyuan21_shape_init(entry: CatalogEntry, job: InstallJob) -> None:
         if patched_simplify != simplify_content:
             simplify_path.write_text(patched_simplify, encoding="utf-8")
             job.append_log("Patched Hunyuan3D-Paint remesh helper for the current trimesh decimation API.")
+        else:
+            job.append_log("Hunyuan3D-Paint remesh API patch is already applied.")
 
     paint_mesh_utils_path = repo_path(entry.vendor_dir_name) / "hy3dpaint" / "DifferentiableRenderer" / "mesh_utils.py"
     if paint_mesh_utils_path.exists():
@@ -494,6 +752,80 @@ def _patch_hunyuan21_shape_init(entry: CatalogEntry, job: InstallJob) -> None:
             job.append_log(
                 "Patched Hunyuan3D-Paint mesh_utils so unavailable Blender bpy does not block OBJ texture export."
             )
+        else:
+            job.append_log("Hunyuan3D-Paint DifferentiableRenderer mesh_utils patch is already applied.")
+
+    custom_rasterizer_dir = paint_dir / "custom_rasterizer"
+    render_wrapper_path = custom_rasterizer_dir / "custom_rasterizer" / "render.py"
+    if render_wrapper_path.exists():
+        render_content = render_wrapper_path.read_text(encoding="utf-8")
+        patched_render = render_content
+        if "tri = tri.to(device=pos.device, dtype=torch.int32).contiguous()" not in patched_render:
+            patched_render = patched_render.replace(
+                "def rasterize(pos, tri, resolution, clamp_depth=torch.zeros(0), use_depth_prior=0):\n"
+                "    assert pos.device == tri.device\n"
+                "    findices, barycentric = custom_rasterizer_kernel.rasterize_image(\n",
+                "def rasterize(pos, tri, resolution, clamp_depth=torch.zeros(0), use_depth_prior=0):\n"
+                "    assert pos.device == tri.device\n"
+                "    tri = tri.to(device=pos.device, dtype=torch.int32).contiguous()\n"
+                "    if clamp_depth.numel() > 0:\n"
+                "        clamp_depth = clamp_depth.to(device=pos.device, dtype=torch.float32).contiguous()\n"
+                "    findices, barycentric = custom_rasterizer_kernel.rasterize_image(\n",
+            )
+        if patched_render != render_content:
+            render_wrapper_path.write_text(patched_render, encoding="utf-8")
+            job.append_log("Patched custom_rasterizer Python wrapper to pass int32 triangle indices into the CUDA kernel.")
+        else:
+            job.append_log("custom_rasterizer Python index-dtype patch is already applied.")
+
+    for rasterizer_source in (
+        custom_rasterizer_dir / "lib" / "custom_rasterizer_kernel_for_windows" / "rasterizer_gpu.cu",
+        custom_rasterizer_dir / "lib" / "custom_rasterizer_kernel" / "rasterizer_gpu.cu",
+    ):
+        if not rasterizer_source.exists():
+            continue
+        rasterizer_content = rasterizer_source.read_text(encoding="utf-8")
+        patched_rasterizer = rasterizer_content.replace(
+            "uint64_t maxint = (uint64_t)MAXINT * (uint64_t)MAXINT + (MAXINT - 1);",
+            "int64_t maxint = (int64_t)MAXINT * (int64_t)MAXINT + (MAXINT - 1);",
+        ).replace(
+            "auto z_min = torch::ones({height, width}, INT64_options) * (uint64_t)maxint;",
+            "auto z_min = torch::ones({height, width}, INT64_options) * maxint;",
+        ).replace(
+            "auto z_min = torch::ones({height, width}, INT64_options) * (long)maxint;",
+            "auto z_min = torch::ones({height, width}, INT64_options) * maxint;",
+        ).replace(
+            "auto z_min = torch::ones({height, width}, UINT64_options) * (uint64_t)maxint;",
+            "auto z_min = torch::ones({height, width}, INT64_options) * maxint;",
+        ).replace(
+            "auto UINT64_options = torch::TensorOptions().dtype(torch::kUInt64).device(torch::kCUDA, device_id).requires_grad(false);",
+            "auto INT64_options = torch::TensorOptions().dtype(torch::kInt64).device(torch::kCUDA, device_id).requires_grad(false);",
+        ).replace(
+            "z_min.data_ptr<uint64_t>()",
+            "z_min.data_ptr<int64_t>()",
+        )
+        if patched_rasterizer != rasterizer_content:
+            rasterizer_source.write_text(patched_rasterizer, encoding="utf-8")
+            job.append_log(f"Patched custom_rasterizer z-buffer pointer dtype for PyTorch 2.10: {rasterizer_source}")
+        elif "z_min.data_ptr<int64_t>()" in rasterizer_content:
+            job.append_log(f"custom_rasterizer z-buffer pointer dtype patch is already applied: {rasterizer_source}")
+
+    obsolete_shim = custom_rasterizer_dir / "custom_rasterizer_kernel.py"
+    if obsolete_shim.exists():
+        obsolete_shim.unlink()
+        job.append_log(f"Removed obsolete Python rasterizer shim before native build: {obsolete_shim}")
+    elif custom_rasterizer_dir.exists():
+        job.append_log("Hunyuan3D-Paint custom_rasterizer source tree is ready for current-env native build.")
+
+
+def _materialize_hunyuan21_paint_runtime(entry: CatalogEntry, job: InstallJob) -> None:
+    if not entry.vendor_dir_name:
+        raise ProviderConfigurationError(f"{entry.name} has no repo directory to materialize.")
+    runtime = materialize_hunyuan21_paint_runtime(source_repo_dir=repo_path(entry.vendor_dir_name), force=True)
+    job.append_log(f"Velocity3D-owned Hunyuan 2.1 paint runtime ready: {runtime.paint_dir}")
+    job.append_log(
+        "The downloaded Hunyuan repository is now treated as model/assets input; Velocity3D executes the private runtime copy."
+    )
 
 
 def _download_huggingface_snapshot(step: InstallPlanStep, job: InstallJob) -> None:
@@ -911,6 +1243,23 @@ def _verify_custom_rasterizer(source_dir: Path, job: InstallJob, env: dict[str, 
     return code == 0
 
 
+def _custom_rasterizer_needs_rebuild(source_dir: Path) -> bool:
+    outputs = list(source_dir.glob("custom_rasterizer_kernel*.pyd")) + list(source_dir.glob("custom_rasterizer_kernel*.so"))
+    if not outputs:
+        return True
+
+    source_patterns = ("*.cpp", "*.cu", "*.h", "*.hpp", "velocity3d_build_setup.py")
+    source_files: list[Path] = []
+    for pattern in source_patterns:
+        source_files.extend(source_dir.rglob(pattern))
+    if not source_files:
+        return False
+
+    latest_source = max(path.stat().st_mtime for path in source_files)
+    oldest_output = min(path.stat().st_mtime for path in outputs)
+    return latest_source > oldest_output
+
+
 def _build_custom_rasterizer(source_dir: Path, job: InstallJob) -> None:
     if not source_dir.exists():
         raise ProviderConfigurationError(f"Custom rasterizer source directory was not found: {source_dir}")
@@ -922,9 +1271,12 @@ def _build_custom_rasterizer(source_dir: Path, job: InstallJob) -> None:
         job.append_log(f"Removed obsolete Python rasterizer shim: {obsolete_shim}")
 
     env = _native_extension_env(source_dir, require_cuda=True)
-    if _verify_custom_rasterizer(source_dir, job, env=env):
+    needs_rebuild = _custom_rasterizer_needs_rebuild(source_dir)
+    if not needs_rebuild and _verify_custom_rasterizer(source_dir, job, env=env):
         job.append_log("custom_rasterizer is already importable from the source tree.")
         return
+    if needs_rebuild:
+        job.append_log("custom_rasterizer native sources changed; rebuilding the extension in the current backend env.")
 
     _validate_native_build_env(env, job, require_cuda=True)
     build_script = _write_custom_rasterizer_build_script(source_dir)
@@ -1078,6 +1430,12 @@ def _run_install_job(job: InstallJob, entry: CatalogEntry) -> None:
                 try:
                     if step.action == "patch_hunyuan21_shape_init":
                         _patch_hunyuan21_shape_init(entry, job)
+                        continue
+                    if step.action == "patch_hunyuan21_paint_sources":
+                        _patch_hunyuan21_paint_sources(entry, job)
+                        continue
+                    if step.action == "materialize_hunyuan21_paint_runtime":
+                        _materialize_hunyuan21_paint_runtime(entry, job)
                         continue
                     if step.action == "download_huggingface_snapshot":
                         _download_huggingface_snapshot(step, job)

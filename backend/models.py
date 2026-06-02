@@ -9,6 +9,15 @@ class TextureOptions(BaseModel):
     checkpoint: Optional[str] = None
 
 
+PipelinePresetId = Literal["preview", "balanced", "building_module", "game_asset", "production"]
+
+
+class PipelineOptions(BaseModel):
+    preset: PipelinePresetId = "balanced"
+    target_face_count: Optional[int] = Field(default=None, ge=1000, le=2_000_000)
+    texture_size: Optional[int] = Field(default=None, ge=512, le=4096)
+
+
 class GenerationRequest(BaseModel):
     type: Literal["text", "image"]
     prompt: Optional[str] = None
@@ -16,6 +25,7 @@ class GenerationRequest(BaseModel):
     reference_image_base64: Optional[str] = None
     model_id: Optional[str] = None
     texture_options: Optional[TextureOptions] = None
+    pipeline_options: Optional[PipelineOptions] = None
     request_id: str
 
     @model_validator(mode="after")
@@ -40,6 +50,9 @@ class GenerationMetadata(BaseModel):
     texture_checkpoint: Optional[str] = None
     material_texture_dir: Optional[str] = None
     material_textures: list[str] = Field(default_factory=list)
+    pipeline_preset: PipelinePresetId = "balanced"
+    target_face_count: Optional[int] = None
+    texture_size: Optional[int] = None
 
 
 class GenerationResponse(BaseModel):

@@ -3,6 +3,14 @@ export interface TextureOptions {
   checkpoint?: string
 }
 
+export type PipelinePresetId = 'preview' | 'balanced' | 'building_module' | 'game_asset' | 'production'
+
+export interface PipelineOptions {
+  preset: PipelinePresetId
+  target_face_count?: number
+  texture_size?: number
+}
+
 export interface GenerationRequest {
   type: 'text' | 'image'
   prompt?: string
@@ -10,6 +18,7 @@ export interface GenerationRequest {
   reference_image_base64?: string
   model_id?: string
   texture_options?: TextureOptions
+  pipeline_options?: PipelineOptions
   request_id: string
 }
 
@@ -24,6 +33,9 @@ export interface GenerationMetadata {
   texture_checkpoint?: string | null
   material_texture_dir?: string | null
   material_textures?: string[]
+  pipeline_preset: PipelinePresetId
+  target_face_count?: number | null
+  texture_size?: number | null
 }
 
 export interface GenerationResponse {

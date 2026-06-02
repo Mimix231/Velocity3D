@@ -1,8 +1,7 @@
 .prompt-bar {
-  padding: 10px 16px;
-  border-top: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-panel) 90%, black 10%) 0%, color-mix(in srgb, var(--bg-panel) 96%, white 4%) 100%);
+  padding: 12px 16px;
+  border-top: 1px solid color-mix(in srgb, var(--outline-soft) 76%, transparent);
+  background: color-mix(in srgb, var(--surface-1) 94%, black 6%);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -94,8 +93,8 @@
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--error) 22%, var(--border));
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--error) 28%, var(--outline-soft));
   background: color-mix(in srgb, var(--error) 9%, transparent);
   color: var(--text);
   font-size: 12px;
@@ -121,8 +120,9 @@
   display: inline-flex;
   padding: 4px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .prompt-mode-pill {
@@ -137,7 +137,11 @@
   font-weight: 600;
   text-align: center;
   cursor: pointer;
-  transition: color 140ms ease, background 140ms ease, transform 140ms ease;
+  transition:
+    color 170ms var(--ease-standard),
+    background 170ms var(--ease-standard),
+    box-shadow 170ms var(--ease-standard),
+    transform 170ms var(--ease-standard);
 }
 
 .prompt-mode-pill:hover {
@@ -145,8 +149,9 @@
 }
 
 .prompt-mode-pill.active {
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-panel));
+  background: var(--surface-active);
   color: var(--text);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .prompt-model-picker {
@@ -165,18 +170,23 @@
 
 .prompt-model-select {
   min-height: 40px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text);
   padding: 0 12px;
   font-size: 13px;
   outline: none;
+  transition:
+    border-color 160ms var(--ease-standard),
+    background 160ms var(--ease-standard),
+    box-shadow 160ms var(--ease-standard);
 }
 
 .prompt-model-select:focus,
 .prompt-textarea:focus {
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--outline-soft));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
 }
 
 .prompt-toolbar-actions {
@@ -203,16 +213,22 @@
 }
 
 .prompt-model-install-btn {
-  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border));
-  background: color-mix(in srgb, var(--accent) 10%, var(--bg-panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--outline-soft));
+  background: var(--surface-active);
   color: var(--text);
   cursor: pointer;
-  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease, opacity 140ms ease;
+  transition:
+    border-color 170ms var(--ease-standard),
+    background 170ms var(--ease-standard),
+    transform 170ms var(--ease-standard),
+    opacity 170ms var(--ease-standard),
+    box-shadow 170ms var(--ease-standard);
 }
 
 .prompt-model-install-btn:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--accent) 46%, var(--border));
-  background: color-mix(in srgb, var(--accent) 14%, var(--bg-panel));
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--outline-strong));
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface-2));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 14%, transparent);
   transform: translateY(-1px);
 }
 
@@ -227,19 +243,19 @@
 }
 
 .prompt-model-status.pending {
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  background: var(--surface-2);
   color: var(--text-muted);
 }
 
 .prompt-library-btn {
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text);
   cursor: pointer;
 }
 
 .prompt-library-btn:hover {
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--outline-soft));
 }
 
 .prompt-model-hint,
@@ -255,9 +271,9 @@
 
 .prompt-drop-hint {
   padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px dashed color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--outline-soft);
+  background: var(--surface-2);
 }
 
 .prompt-model-name {
@@ -280,8 +296,8 @@
   min-height: 32px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text);
   font-size: 11px;
   font-weight: 600;
@@ -296,9 +312,9 @@
   flex: 1 1 340px;
   min-width: 220px;
   min-height: 38px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text);
   padding: 0 12px;
   font-size: 12px;
@@ -320,16 +336,17 @@
   gap: 12px;
   min-height: 54px;
   padding: 7px 10px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 82%, white 18%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-1);
 }
 
 .prompt-image-thumb {
   width: 42px;
   height: 42px;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--outline-soft);
   object-fit: cover;
 }
 
@@ -361,7 +378,7 @@
 .prompt-image-clear {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: 999px;
   border: 1px solid transparent;
   background: none;
   color: var(--text-muted);
@@ -372,7 +389,8 @@
 
 .prompt-image-clear:hover {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--border) 84%, white 16%);
+  border-color: var(--outline-soft);
+  background: var(--surface-hover);
 }
 
 .prompt-validation-error {
@@ -391,7 +409,7 @@
 .prompt-submit-btn,
 .prompt-cancel-btn {
   min-height: 42px;
-  border-radius: 10px;
+  border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -400,19 +418,25 @@
   font-weight: 600;
   cursor: pointer;
   flex-shrink: 0;
-  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 180ms ease, opacity 140ms ease;
+  transition:
+    transform 170ms var(--ease-standard),
+    border-color 170ms var(--ease-standard),
+    background 170ms var(--ease-standard),
+    box-shadow 220ms var(--ease-standard),
+    opacity 170ms var(--ease-standard);
 }
 
 .prompt-upload-btn {
   width: 42px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text-muted);
 }
 
 .prompt-upload-btn:hover:not(:disabled) {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--outline-soft));
+  background: var(--surface-hover);
   transform: translateY(-1px);
 }
 
@@ -429,14 +453,18 @@
   min-height: 42px;
   max-height: 120px;
   resize: none;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text);
   padding: 10px 12px;
   font-size: 13px;
   line-height: 1.5;
   outline: none;
+  transition:
+    border-color 170ms var(--ease-standard),
+    background 170ms var(--ease-standard),
+    box-shadow 170ms var(--ease-standard);
 }
 
 .prompt-textarea::placeholder {
@@ -446,10 +474,10 @@
 .prompt-submit-btn {
   position: relative;
   padding: 0 16px;
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, white 12%) 0%, var(--accent) 100%);
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, white 12%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 84%, white 16%) 0%, var(--accent) 100%);
   color: white;
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0), 0 10px 30px color-mix(in srgb, var(--accent) 16%, transparent);
   overflow: hidden;
 }
 
@@ -467,7 +495,7 @@
 .prompt-submit-btn:hover:not(:disabled) {
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent-hover) 88%, white 12%) 0%, var(--accent-hover) 100%);
   transform: translateY(-1px);
-  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--accent) 38%, transparent), 0 16px 36px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .prompt-submit-btn:active:not(:disabled),
@@ -478,7 +506,7 @@
 
 .prompt-cancel-btn {
   padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--error) 22%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--error) 28%, var(--outline-soft));
   background: color-mix(in srgb, var(--error) 9%, transparent);
   color: color-mix(in srgb, var(--error) 82%, white 18%);
 }
@@ -500,7 +528,7 @@
   flex: 1;
   height: 3px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--border) 82%, white 18%);
+  background: var(--surface-2);
   position: relative;
   overflow: hidden;
 }
@@ -571,8 +599,8 @@
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, white 18%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text-muted);
   font-size: 11px;
   font-weight: 600;
@@ -596,8 +624,8 @@
   min-height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text);
   font-size: 11px;
   font-weight: 600;
@@ -610,16 +638,18 @@
 }
 
 .prompt-terminal-log {
-  flex: 0 0 auto;
-  min-height: 140px;
-  overflow: visible;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
+  flex: 1 1 132px;
+  min-height: 122px;
+  max-height: 150px;
+  overflow-y: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-soft);
   background: rgba(9, 10, 12, 0.94);
   padding: 12px;
-  font-family: var(--font-mono, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace);
+  font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.55;
+  scrollbar-gutter: stable;
 }
 
 .prompt-terminal-line {

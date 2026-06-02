@@ -1,8 +1,8 @@
 .downloader-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(6, 8, 14, 0.72);
-  backdrop-filter: blur(10px);
+  background: rgba(6, 8, 14, 0.62);
+  backdrop-filter: blur(16px) saturate(1.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12,14 +12,14 @@
 .downloader-panel {
   width: min(1280px, 96vw);
   max-height: 92vh;
-  border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--border) 78%, white 22%);
-  background: color-mix(in srgb, var(--bg-panel) 96%, black 4%);
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+  border-radius: 28px;
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-3);
   overflow: hidden;
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr);
-  animation: downloader-enter 160ms ease-out;
+  animation: downloader-enter 180ms var(--ease-emphasized);
 }
 
 .downloader-header,
@@ -32,7 +32,7 @@
 }
 
 .downloader-header {
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, white 22%);
+  border-bottom: 1px solid color-mix(in srgb, var(--outline-soft) 78%, transparent);
 }
 
 .downloader-title {
@@ -76,15 +76,15 @@
 .downloader-summary-chip,
 .downloader-default-pill,
 .downloader-mode-chip {
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 84%, white 16%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text);
 }
 
 .downloader-close {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 999px;
   border: 1px solid transparent;
   background: none;
   color: var(--text-muted);
@@ -94,13 +94,14 @@
 
 .downloader-close:hover {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--border) 84%, white 16%);
+  border-color: var(--outline-soft);
+  background: var(--surface-hover);
 }
 
 .downloader-toolbar {
   padding-top: 14px;
   padding-bottom: 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, white 22%);
+  border-bottom: 1px solid color-mix(in srgb, var(--outline-soft) 78%, transparent);
 }
 
 .downloader-filter-group {
@@ -108,8 +109,8 @@
   gap: 6px;
   padding: 4px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
 }
 
 .downloader-filter-btn,
@@ -117,12 +118,18 @@
 .downloader-action-btn,
 .downloader-default-btn {
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
+  transition:
+    border-color 170ms var(--ease-standard),
+    background 170ms var(--ease-standard),
+    box-shadow 170ms var(--ease-standard),
+    transform 170ms var(--ease-standard),
+    opacity 170ms var(--ease-standard);
 }
 
 .downloader-filter-btn {
@@ -132,21 +139,31 @@
 }
 
 .downloader-filter-btn.active {
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-panel));
+  background: var(--surface-active);
   color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--outline-soft));
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .downloader-search {
   min-width: 280px;
   min-height: 40px;
   padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text);
   font-size: 13px;
   outline: none;
+  transition:
+    border-color 170ms var(--ease-standard),
+    background 170ms var(--ease-standard),
+    box-shadow 170ms var(--ease-standard);
+}
+
+.downloader-search:focus {
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--outline-soft));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
 }
 
 .downloader-refresh-btn {
@@ -175,9 +192,9 @@
 .downloader-family-rail,
 .downloader-detail {
   min-height: 0;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 72%, transparent);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-soft);
+  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
 }
 
 .downloader-family-rail {
@@ -190,7 +207,7 @@
 .downloader-family-btn {
   min-height: 42px;
   padding: 0 10px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-muted);
@@ -201,14 +218,18 @@
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: color 140ms ease, background 140ms ease, border-color 140ms ease, transform 140ms ease;
+  transition:
+    color 170ms var(--ease-standard),
+    background 170ms var(--ease-standard),
+    border-color 170ms var(--ease-standard),
+    transform 170ms var(--ease-standard);
 }
 
 .downloader-family-btn:hover,
 .downloader-family-btn.active {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
-  background: color-mix(in srgb, var(--accent) 10%, var(--bg-panel));
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--outline-soft));
+  background: var(--surface-active);
 }
 
 .downloader-family-btn:hover {
@@ -225,36 +246,40 @@
 
 .downloader-empty {
   padding: 18px;
-  border-radius: 12px;
-  border: 1px dashed color-mix(in srgb, var(--border) 84%, white 16%);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--outline-soft);
   color: var(--text-muted);
   font-size: 13px;
 }
 
 .downloader-item {
   padding: 14px;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-alt) 84%, white 16%) 0%, var(--bg-panel) 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   display: grid;
   gap: 9px;
   cursor: pointer;
-  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+  transition:
+    transform 170ms var(--ease-standard),
+    border-color 170ms var(--ease-standard),
+    background 170ms var(--ease-standard),
+    box-shadow 170ms var(--ease-standard);
 }
 
 .downloader-item.recommended {
-  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--outline-soft));
 }
 
 .downloader-item:hover,
 .downloader-item.active {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--outline-strong));
+  box-shadow: var(--shadow-2);
 }
 
 .downloader-item.active {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, var(--bg-alt)) 0%, var(--bg-panel) 100%);
+  background: var(--surface-active);
 }
 
 .downloader-item-name-row {
@@ -270,7 +295,7 @@
 }
 
 .downloader-recommended {
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-panel));
+  background: var(--surface-active);
   color: var(--text);
 }
 
@@ -319,9 +344,9 @@
 }
 
 .downloader-setup-block {
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg) 28%, transparent);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-soft);
+  background: color-mix(in srgb, var(--surface-0) 68%, transparent);
   overflow: hidden;
 }
 
@@ -342,8 +367,8 @@
 .downloader-install-step {
   display: block;
   padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-soft);
   background: color-mix(in srgb, var(--bg) 88%, white 12%);
   color: color-mix(in srgb, var(--accent) 82%, white 18%);
   font-size: 11px;
@@ -367,12 +392,14 @@
 .downloader-action-btn:hover:not(:disabled),
 .downloader-default-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--outline-strong));
+  background: var(--surface-hover);
+  box-shadow: var(--shadow-1);
 }
 
 .downloader-action-btn.primary {
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
-  background: color-mix(in srgb, var(--accent) 15%, var(--bg-panel));
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--outline-soft));
+  background: var(--surface-active);
 }
 
 .downloader-action-btn.ghost {
@@ -380,8 +407,8 @@
 }
 
 .downloader-default-btn.active {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-panel));
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--outline-soft));
+  background: var(--surface-active);
 }
 
 .downloader-default-btn:disabled,
@@ -432,9 +459,9 @@
   grid-template-columns: auto minmax(0, 1fr);
   gap: 8px 12px;
   padding: 12px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg) 30%, transparent);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-soft);
+  background: color-mix(in srgb, var(--surface-0) 70%, transparent);
   font-size: 12px;
 }
 

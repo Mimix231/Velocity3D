@@ -12,20 +12,27 @@
 .export-format-btn {
   min-height: 42px;
   padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
-  background: color-mix(in srgb, var(--bg-alt) 86%, white 14%);
+  border-radius: 999px;
+  border: 1px solid var(--outline-soft);
+  background: var(--surface-2);
   color: var(--text-muted);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.45px;
   text-transform: uppercase;
   cursor: pointer;
+  transition:
+    color 170ms var(--ease-standard),
+    border-color 170ms var(--ease-standard),
+    background 170ms var(--ease-standard),
+    transform 170ms var(--ease-standard);
 }
 
 .export-format-btn:hover:not(:disabled) {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--outline-soft));
+  background: var(--surface-hover);
+  transform: translateY(-1px);
 }
 
 .export-format-btn:disabled {
@@ -42,11 +49,13 @@
   min-width: 220px;
   max-width: 440px;
   padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, white 16%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-soft);
   font-size: 12px;
   text-align: center;
   pointer-events: none;
+  box-shadow: var(--shadow-2);
+  animation: export-toast-enter 170ms var(--ease-emphasized);
 }
 
 .export-toast.success {
@@ -57,4 +66,15 @@
 .export-toast.error {
   background: color-mix(in srgb, var(--error) 12%, var(--bg-panel));
   color: color-mix(in srgb, var(--error) 80%, white 20%);
+}
+
+@keyframes export-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
 }
